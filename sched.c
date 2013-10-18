@@ -26,5 +26,13 @@ void create_process(func_t f, void* args) {
 
 void yield() {
     // Le positionnement du next est déjà fait dans create_process...
+    if (current_process->next->state == DYING) {
+        pcb_s* terminated_proc = current_process->next;
+        
+        current_process->next = terminated_proc->next;
+        current_process->next->prev = current_proc;
+        
+        FreeAllocatedMemory(terminated_proc);
+    }
     ctx_switch(current_process->next);
 }
