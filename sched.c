@@ -1,12 +1,15 @@
 #include "sched.h"
-
-#include "dispatcher.h"
 #include "allocateMemory.h"
 
 void create_process(func_t f, void* args) {
     // On initialise le PCB
     struct pcb_s* pcb = (struct pcb_s*) AllocateMemory(sizeof(struct pcb_s));
-    init_pcb(pcb, f, args, STACK_SIZE);
+    
+    // init pcb
+    pcb->state = NEW;
+    pcb->args = args;
+    pcb->entry_point = f;
+    pcb->sp = (uint32_t*) (AllocateMemory(STACK_SIZE) + (STACK_SIZE - 1) * 4);
     
     if (current_process == 0) {
         pcb->next = pcb;
@@ -26,14 +29,43 @@ void create_process(func_t f, void* args) {
 }
 
 void yield() {
-    // Le positionnement du next est déjà fait dans create_process...
-    if (current_process->next->state == DYING) {
+        
+    // On stocke les valeurs des registres dans  la pile 
+    __asm volatile ("push {r0-r12,lr}");
+    
+    // On enregistre le contexte courant
+    __asm("mov %0, sp" : "=r"(current_process->sp));
+
+    while (current_process->next->state == DYING) {
         struct pcb_s* terminated_proc = current_process->next;
         
         current_process->next = terminated_proc->next;
         current_process->next->prev = current_process;
         
         FreeAllocatedMemory((uint32_t*) terminated_proc);
+        
+        current_process = current_process->next;
+        __asm("mov sp, %0" : : "r"(current_process->sp));
     }
-    ctx_switch(current_process->next);
+
+    
+    current_process = current_process->next;
+    __asm("mov sp, %0" : : "r"(current_process->sp));
+    
+    if (current_process->state == NEW) {
+        current_process->state = RUNNING;
+        current_process->entry_point(current_process->args);
+        current_process->state = DYING;
+        yield();
+    }
+    else {
+        // On recupère les valeurs enregistrées des registres depuis la pile à partir du nouveau sp
+        __asm volatile ("pop {r0-r12,lr}");
+    }
+
 }
+
+
+
+
+

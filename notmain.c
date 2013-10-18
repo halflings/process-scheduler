@@ -1,9 +1,6 @@
-#include "process.h"
-#include "dispatcher.h"
 #include "sched.h"
 
-
-void funcA()
+void funcA(void* args)
 {
   int cptA = 0;
 
@@ -13,11 +10,11 @@ void funcA()
   
 }
 
-void funcB()
+void funcB(void* args)
 {
   int cptB = 1;
 
-  while ( cptB<6 ) {
+  while ( 1 ) {
     cptB += 2 ;
     yield();
   }
