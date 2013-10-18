@@ -7,17 +7,17 @@ void funcA()
 {
   int cptA = 0;
 
-  while ( 1 ) {
-    cptA ++;
-    yield();
-  }
+
+  cptA ++;
+  yield();
+  
 }
 
 void funcB()
 {
   int cptB = 1;
 
-  while ( 1 ) {
+  while ( cptB<6 ) {
     cptB += 2 ;
     yield();
   }

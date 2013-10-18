@@ -21,18 +21,19 @@ void create_process(func_t f, void* args) {
         
         // On place le PCB à la fin de notre chaîne
         (current_process->prev)->next = pcb;
+        current_process->prev = pcb;
     }
 }
 
 void yield() {
     // Le positionnement du next est déjà fait dans create_process...
     if (current_process->next->state == DYING) {
-        pcb_s* terminated_proc = current_process->next;
+        struct pcb_s* terminated_proc = current_process->next;
         
         current_process->next = terminated_proc->next;
-        current_process->next->prev = current_proc;
+        current_process->next->prev = current_process;
         
-        FreeAllocatedMemory(terminated_proc);
+        FreeAllocatedMemory((uint32_t*) terminated_proc);
     }
     ctx_switch(current_process->next);
 }
