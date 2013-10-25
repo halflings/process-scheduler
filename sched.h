@@ -23,5 +23,6 @@ struct pcb_s* current_process;
 
 void create_process(func_t f, void* args);
 void yield();
+void start_sched();
 
 #endif

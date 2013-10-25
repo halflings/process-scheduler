@@ -1,5 +1,7 @@
 #include "sched.h"
 #include "allocateMemory.h"
+#include "hw.h"
+
 
 void create_process(func_t f, void* args) {
     // On initialise le PCB
@@ -28,12 +30,10 @@ void create_process(func_t f, void* args) {
     }
 }
 
-void yield() {
+void  __attribute__((naked)) ctx_switch() {
         
-    // On stocke les valeurs des registres dans  la pile 
-    __asm volatile ("push {r0-r12,lr}");
-    
     // On enregistre le contexte courant
+    __asm volatile ("push {r0-r12,lr}");
     __asm("mov %0, sp" : "=r"(current_process->sp));
 
     while (current_process->next->state == DYING) {
@@ -48,23 +48,32 @@ void yield() {
         __asm("mov sp, %0" : : "r"(current_process->sp));
     }
 
-    
     current_process = current_process->next;
     __asm("mov sp, %0" : : "r"(current_process->sp));
+	 
+
     
     if (current_process->state == NEW) {
         current_process->state = RUNNING;
+
+        ENABLE_IRQ();
         current_process->entry_point(current_process->args);
         current_process->state = DYING;
-        yield();
+
     }
     else {
+        ENABLE_IRQ();
         // On recupère les valeurs enregistrées des registres depuis la pile à partir du nouveau sp
         __asm volatile ("pop {r0-r12,lr}");
     }
-
 }
-
+ 
+void start_sched() {
+	DISABLE_IRQ();
+	init_hw();
+    set_next_tick_and_enable_timer_irq();
+	ENABLE_IRQ();
+}
 
 
 

@@ -6,7 +6,22 @@
 .globl _start
 _start:
     ldr pc,reset_handler
+    ldr pc,undefined_handler
+    ldr pc,swi_handler
+    ldr pc,prefetch_handler
+    ldr pc,data_handler
+    ldr pc,unused_handler
+    ldr pc,irq_handler
+    ldr pc,fiq_handler
 reset_handler:      .word reset
+undefined_handler:  .word undefined
+swi_handler:        .word swi
+prefetch_handler:   .word prefetch
+data_handler:       .word data
+unused_handler:     .word unused
+irq_handler:        .word irq
+fiq_handler:        .word fiq
+
 reset:
     mov r0,#0x8000
     mov r1,#0x0000
@@ -35,6 +50,13 @@ reset:
     ;@msr cpsr_c, r0
 
     bl notmain
+hang: b hang
+undefined:	 b undefined
+swi:	 b swi
+prefetch:	b prefetch
+data:	 b data
+unused:	b unused
+fiq:	b fiq
 
 .globl PUT32
 PUT32:
@@ -68,7 +90,8 @@ BRANCHTO:
 .globl dummy
 dummy:
     bx lr
-
+irq:
+	b ctx_switch
 
 ;@-------------------------------------------------------------------------
 ;@-------------------------------------------------------------------------

@@ -3,11 +3,10 @@
 void funcA(void* args)
 {
   int cptA = 0;
+  while ( 1 ) {
+	cptA ++;
+   }
 
-
-  cptA ++;
-  yield();
-  
 }
 
 void funcB(void* args)
@@ -16,7 +15,6 @@ void funcB(void* args)
 
   while ( 1 ) {
     cptB += 2 ;
-    yield();
   }
 }
 
@@ -26,7 +24,7 @@ int notmain ( void )
   create_process(funcA, (void*) 0);
   create_process(funcB, (void*) 0);
   
-  yield();
+  start_sched();
 
   /* Pas atteignable vues nos 2 fonctions */
   return(0);
