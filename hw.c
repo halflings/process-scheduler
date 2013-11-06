@@ -1,15 +1,15 @@
 #include "hw.h"
 
-#define CS 0xF2003000
-#define CLO 0xF2003004
-#define C0 0xF200300C
-#define C1 0xF2003010
-#define C2 0xF2003014
-#define C3 0xF2003018
+#define CS 0x20003000
+#define CLO 0x20003004
+#define C0 0x2000300C
+#define C1 0x20003010
+#define C2 0x20003014
+#define C3 0x20003018
 
-#define GPFSEL1 0xF2200004
-#define GPSET0  0xF220001C
-#define GPCLR0  0xF2200028
+#define GPFSEL1 0x20200004
+#define GPSET0 0x2020001C
+#define GPCLR0 0x20200028
 
 #define INTERVAL 0x00080000
 
@@ -87,5 +87,5 @@ init_hw()
     enable_timer_irq();
     
     /* Enable interrupt *line* */
-    PUT32(0x7E00B210, 0x00000002);
+    PUT32(0x2000B210, 0x00000002);
 }

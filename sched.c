@@ -31,7 +31,12 @@ void create_process(func_t f, void* args) {
 }
 
 void  __attribute__((naked)) ctx_switch() {
-        
+
+    __asm("sub lr, lr, #4");
+    __asm("srsdb sp!, #19");
+    __asm("cps #19");
+
+
     // On enregistre le contexte courant
     __asm volatile ("push {r0-r12,lr}");
     __asm("mov %0, sp" : "=r"(current_process->sp));
@@ -55,16 +60,19 @@ void  __attribute__((naked)) ctx_switch() {
     
     if (current_process->state == NEW) {
         current_process->state = RUNNING;
-
+        set_next_tick_and_enable_timer_irq();
         ENABLE_IRQ();
         current_process->entry_point(current_process->args);
+        DISABLE_IRQ();
         current_process->state = DYING;
 
     }
     else {
-        ENABLE_IRQ();
+        set_next_tick_and_enable_timer_irq();
         // On recupère les valeurs enregistrées des registres depuis la pile à partir du nouveau sp
         __asm volatile ("pop {r0-r12,lr}");
+        ENABLE_IRQ();
+        __asm("rfefd sp!");
     }
 }
  

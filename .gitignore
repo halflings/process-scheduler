@@ -17,6 +17,11 @@
 *.out
 *.app
 
+*.bin
+*.img
+*.elif
+*.hex
+
 kernel.bin
 kernel.img
 kernel.elif
