@@ -1,8 +1,10 @@
 #include "sem.h"
+#include "allocateMemory.h"
+#include "sched.h"
 
 void sem_init(struct sem_s* sem, unsigned int val){
-	sem = Allocate(sizeof(struct sem_s));
-	sem->value = val;
+	sem = (struct sem_s*) AllocateMemory(sizeof(struct sem_s));
+	sem->val = val;
 	sem->waiting = 0;
 	sem->queue = 0;
 }
@@ -10,16 +12,16 @@ void sem_init(struct sem_s* sem, unsigned int val){
 void sem_up(struct sem_s* sem) {
 	if (sem->waiting > 0) {
 		// We take the first waiting process
-		waiting_process* first_process = sem->queue;
+		struct waiting_process* first_process = sem->queue;
 		// Remove it from the top of the waiting list
-		queue = first_process->next;
+		sem->queue = first_process->next;
 		sem->waiting -= 1;
 
 		// Put its state at "RUNNING"
 		first_process->process->state = RUNNING;
 
 		// And free the allocated memory to its position in the queue
-        FreeAllocatedMemory((uint32_t*) first_process);
+		FreeAllocatedMemory((uint32_t*) first_process);
 	}
 
 	sem->val += 1;
@@ -32,7 +34,7 @@ void sem_down(struct sem_s* sem) {
 
 	if (sem->val < 0) {
 		// Initializing "wait_proc"
-		waiting_process* wait_proc = (struct waiting_process*) AllocateMemory(sizeof(waiting_process));
+		struct waiting_process* wait_proc = (struct waiting_process*) AllocateMemory(sizeof(struct waiting_process));
 		wait_proc->process = current_process;
 		wait_proc->next =  0;
 

@@ -21,7 +21,7 @@ struct pcb_s {
 struct pcb_s* current_process;
 
 void create_process(func_t f, void* args);
-void yield();
+void ctx_switch();
 void start_sched();
 
 #endif

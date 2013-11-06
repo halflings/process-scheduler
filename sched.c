@@ -39,13 +39,15 @@ void  __attribute__((naked)) ctx_switch() {
     __asm volatile ("push {r0-r12,lr}");
     __asm("mov %0, sp" : "=r"(current_process->sp));
 
-    while (current_process->next->state == TERMINATED) {
-        struct pcb_s* terminated_proc = current_process->next;
+    while (current_process->next->state == TERMINATED || current_process->next->state == WAITING) {
+	if (current_process->next->state == TERMINATED) {
+        	struct pcb_s* terminated_proc = current_process->next;
         
-        current_process->next = terminated_proc->next;
-        current_process->next->prev = current_process;
+        	current_process->next = terminated_proc->next;
+        	current_process->next->prev = current_process;
         
-        FreeAllocatedMemory((uint32_t*) terminated_proc);
+        	FreeAllocatedMemory((uint32_t*) terminated_proc);
+	}
         
         current_process = current_process->next;
         __asm("mov sp, %0" : : "r"(current_process->sp));
@@ -55,10 +57,7 @@ void  __attribute__((naked)) ctx_switch() {
     __asm("mov sp, %0" : : "r"(current_process->sp));
 	 
 
-    if (current_process->state == WAITING) {
-        ctx_switch();
-    }
-    else if (current_process->state == NEW) {
+    if (current_process->state == NEW) {
         current_process->state = RUNNING;
         set_next_tick_and_enable_timer_irq();
         ENABLE_IRQ();
