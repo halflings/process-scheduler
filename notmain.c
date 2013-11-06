@@ -1,4 +1,5 @@
 #include "sched.h"
+#include "sem.h"
 
 void funcA(void* args) {
     int cptA = 0;

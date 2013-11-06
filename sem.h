@@ -1,19 +1,21 @@
 #ifndef SEM_H
 #define SEM_H
+#include "sched.h"
 
 struct waiting_process {
-	pcb_s* process;
-	waiting_process** next;
+	struct pcb_s* process;
+	struct waiting_process* next;
 };
 
-struct sem {
-    int value;
+struct sem_s {
+    int val;
 
     int waiting;
-    waiting_process* queue;
-    waiting_process* last_process;
+    struct waiting_process* queue;
+    struct waiting_process* last_process;
 };
 
 void sem_init(struct sem_s* sem, unsigned int val);
-
+void sem_down(struct sem_s* sem);
+void sem_up(struct sem_s* sem);
 #endif
