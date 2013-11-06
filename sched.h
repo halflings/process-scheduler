@@ -4,10 +4,9 @@
 #define STACK_SIZE 0xffff
 
 typedef void (*func_t) (void*);
-typedef enum {NEW,RUNNING,DYING} procState;
+typedef enum {NEW,RUNNING,TERMINATED,WAITING} procState;
 
 struct pcb_s {
-        
     procState state;
     struct pcb_s* next;
     struct pcb_s* prev;
