@@ -2,7 +2,7 @@
 
 void funcA(void* args) {
     int cptA = 0;
-    while ( 1 ) {
+    while ( cptA < 10 ) {
     cptA ++;
     }
 }

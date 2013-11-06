@@ -31,7 +31,6 @@ void create_process(func_t f, void* args) {
 }
 
 void  __attribute__((naked)) ctx_switch() {
-
     __asm("sub lr, lr, #4");
     __asm("srsdb sp!, #19");
     __asm("cps #19");
@@ -63,17 +62,16 @@ void  __attribute__((naked)) ctx_switch() {
         set_next_tick_and_enable_timer_irq();
         ENABLE_IRQ();
         current_process->entry_point(current_process->args);
-        DISABLE_IRQ();
         current_process->state = DYING;
-
     }
     else {
         set_next_tick_and_enable_timer_irq();
         // On recupère les valeurs enregistrées des registres depuis la pile à partir du nouveau sp
         __asm volatile ("pop {r0-r12,lr}");
         ENABLE_IRQ();
-        __asm("rfefd sp!");
     }
+    
+    __asm("rfefd sp!");
 }
  
 void start_sched() {
