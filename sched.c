@@ -62,16 +62,19 @@ void  __attribute__((naked)) ctx_switch() {
         set_next_tick_and_enable_timer_irq();
         ENABLE_IRQ();
         current_process->entry_point(current_process->args);
+        DISABLE_IRQ();
         current_process->state = DYING;
+        ctx_switch();
     }
     else {
         set_next_tick_and_enable_timer_irq();
         // On recupère les valeurs enregistrées des registres depuis la pile à partir du nouveau sp
         __asm volatile ("pop {r0-r12,lr}");
-        ENABLE_IRQ();
+
     }
     
     __asm("rfefd sp!");
+    ENABLE_IRQ();
 }
  
 void start_sched() {
