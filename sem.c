@@ -57,3 +57,19 @@ void sem_down(struct sem_s* sem) {
 	}
 
 }
+
+void mtx_init(struct mtx_s* mutex){
+	mutex = (struct mtx_s*) AllocateMemory(sizeof(struct mtx_s));
+	mutex->iIsLocked = 0;
+	mutex->iWaiting = 0;
+	mutex->queue = 0;
+	//mutex->pOwnerPid=getpid();
+}
+void mtx_lock(struct mtx_s* mutex){
+	
+
+}
+void mtx_unlock(struct mtx_s* mutex){
+}
+
+
