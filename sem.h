@@ -18,6 +18,7 @@ struct sem_s {
 ////////////mutex
 struct mtx_s {
     struct sem_s * sem_mtx;
+    struct pcb_s* owner;
 };
 
 void sem_init(struct sem_s** sem, unsigned int val);

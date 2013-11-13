@@ -65,16 +65,22 @@ void sem_down(struct sem_s* sem) {
 
 void mtx_init(struct mtx_s** mutex){
 	(*mutex) = (struct mtx_s*) AllocateMemory(sizeof(struct mtx_s));
-	(*mutex)->sem_mtx->val = 1;
-	(*mutex)->sem_mtx->waiting = 0;
-	(*mutex)->sem_mtx->queue = 0;
+	(*mutex)->owner = 0;
+    sem_init( &( (*mutex)->sem_mtx ), 1);
 	//mutex->pOwnerPid=getpid();
 }
 void mtx_lock(struct mtx_s* mutex){
-	
-
+    DISABLE_IRQ();
+    mutex->owner = current_process;
+    sem_down(mutex->sem_mtx);
+	ENABLE_IRQ();
 }
 void mtx_unlock(struct mtx_s* mutex){
+    DISABLE_IRQ();
+    if (current_process == mutex->owner) {
+        sem_up(mutex->sem_mtx);
+    }
+	ENABLE_IRQ();
 }
 
 
