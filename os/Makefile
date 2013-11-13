@@ -9,15 +9,13 @@ AS = $(ARMGNU)-as
 CFLAGS = -Wall -nostdlib -fomit-frame-pointer -mno-apcs-frame -nostartfiles -ffreestanding -g -march=armv6z -marm
 ASFLAGS = -g -march=armv6z
 
-C_FILES=notmain.c hw.c allocateMemory.c sched.c sem.c
-AS_FILES=vectors.s
+C_FILES=hw.c allocateMemory.c sched.c sem.c
 
-OBJS = $(patsubst %.s,%.o, $(AS_FILES))
 OBJS += $(patsubst %.c,%.o, $(C_FILES))
 
 .PHONY: gcc clean
 
-gcc : kernel.hex kernel.bin kernel.img
+gcc: $(OBJS)
 
 clean :
 	rm -f *.o
@@ -30,19 +28,3 @@ clean :
 	rm -f *.clang.opt.s
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
-%.o: %.s
-	$(AS) $(ASFLAGS) $< -o $@
-
-kernel.elf : memmap $(OBJS)
-	$(LD) $(OBJS) -T memmap -o kernel.elf
-	$(OBJDUMP) -D kernel.elf > kernel.list
-
-kernel.bin : kernel.elf
-	$(OBJCOPY) kernel.elf -O binary kernel.bin
-
-kernel.hex : kernel.elf
-	$(OBJCOPY) kernel.elf -O ihex kernel.hex
-
-kernel.img : kernel.elf
-	$(OBJCOPY) kernel.elf -O binary kernel.img
-	cp kernel.img SD_Card/

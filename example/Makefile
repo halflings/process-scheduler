@@ -10,7 +10,7 @@ CFLAGS = -Wall -nostdlib -fomit-frame-pointer -mno-apcs-frame -nostartfiles -ffr
 ASFLAGS = -g -march=armv6z
 
 C_FILES=notmain.c ../os/hw.c ../os/allocateMemory.c ../os/sched.c ../os/sem.c
-AS_FILES=../os/vectors.s
+AS_FILES=vectors.s
 
 OBJS = $(patsubst %.s,%.o, $(AS_FILES))
 OBJS += $(patsubst %.c,%.o, $(C_FILES))
