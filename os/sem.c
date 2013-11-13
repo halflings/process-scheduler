@@ -60,6 +60,9 @@ void sem_down(struct sem_s* sem) {
             //DO NOTHING
         }
 	}
+	else {
+		ENABLE_IRQ();
+	}
 
 }
 

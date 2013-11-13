@@ -2,6 +2,12 @@
 #include "allocateMemory.h"
 #include "hw.h"
 
+void start_sched() {
+	DISABLE_IRQ();
+	init_hw();
+    set_next_tick_and_enable_timer_irq();
+	ENABLE_IRQ();
+}
 
 void create_process(func_t f, void* args) {
     // On initialise le PCB
@@ -12,6 +18,7 @@ void create_process(func_t f, void* args) {
     pcb->args = args;
     pcb->entry_point = f;
     pcb->sp = (uint32_t*) (AllocateMemory(STACK_SIZE) + (STACK_SIZE - 1) * 4);
+    pcb->ticks = 0;
     
     if (current_process == 0) {
         pcb->next = pcb;
@@ -35,7 +42,7 @@ void  __attribute__((naked)) ctx_switch() {
     __asm("srsdb sp!, #19");
     __asm("cps #19");
 
-    // On enregistre le contexte courant
+    // Saving the current context
     __asm volatile ("push {r0-r12,lr}");
     __asm("mov %0, sp" : "=r"(current_process->sp));
 
@@ -51,12 +58,28 @@ void  __attribute__((naked)) ctx_switch() {
         
         current_process = current_process->next;
         __asm("mov sp, %0" : : "r"(current_process->sp));
-    }
+    }  
 
+    // Switching to the next process
     current_process = current_process->next;
     __asm("mov sp, %0" : : "r"(current_process->sp));
-	 
 
+	 
+	// Decrementing "ticks" count for sleeping processes
+    struct pcb_s* proc_iter = current_process;
+    do {
+    	if (proc_iter->state == SLEEPING) {
+	        proc_iter->ticks -= 1;
+	        if (proc_iter->ticks <= 0) {
+	            proc_iter->state = RUNNING;
+            }
+        }
+        
+        proc_iter = proc_iter->next;
+    }
+    while (proc_iter != current_process);
+    
+    // If the process is new, we execute its entry-point
     if (current_process->state == NEW) {
         current_process->state = RUNNING;
         set_next_tick_and_enable_timer_irq();
@@ -68,22 +91,24 @@ void  __attribute__((naked)) ctx_switch() {
     }
     else {
         set_next_tick_and_enable_timer_irq();
-        // On recupère les valeurs enregistrées des registres depuis la pile à partir du nouveau sp
+        // Restoring the context
         __asm volatile ("pop {r0-r12,lr}");
 
     }
     
+    // Cleaning up after ctx_switch's  execution
     __asm("rfefd sp!");
     ENABLE_IRQ();
 }
  
-void start_sched() {
-	DISABLE_IRQ();
-	init_hw();
-    set_next_tick_and_enable_timer_irq();
-	ENABLE_IRQ();
+
+void sleep_proc(int ticks) {
+
+    current_process->state = SLEEPING;
+    current_process->ticks = ticks;
+    
+    while (current_process->state == SLEEPING) {
+    }
 }
-
-
 
 
