@@ -25,9 +25,10 @@ void funcOne(void* args) {
     while (1==1){
         int i;
         sem_down(sem_test);
-        for (i=0; i<1000000;i++){
+        for (i=0; i<10000000;i++){
             cpt++;
         }
+	sleep_proc(4);
         sem_up(sem_test);
     }    
 }
@@ -37,9 +38,10 @@ void funcTwo(void* args) {
     while (1==1){
         int i =0;
         sem_down(sem_test);
-        for (i=0; i<1000000;i++){
+        for (i=0; i<10000000;i++){
             cpt++;
-            }
+        }
+	    sleep_proc(1);
         sem_up(sem_test);
     }              
 }
