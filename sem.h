@@ -17,20 +17,15 @@ struct sem_s {
 
 ////////////mutex
 struct mtx_s {
-	int iIsLocked;
-	int iWaiting;
-	//pid_t pOwnerPid;
-	struct waiting_process* queue;
-	struct waiting_process* last_process;
-	
+    struct sem_s * sem_mtx;
 };
 
-void sem_init(struct sem_s* sem, unsigned int val);
+void sem_init(struct sem_s** sem, unsigned int val);
 void sem_down(struct sem_s* sem);
 void sem_up(struct sem_s* sem);
 
 
-void mtx_init(struct mtx_s* mutex);
+void mtx_init(struct mtx_s** mutex);
 void mtx_lock(struct mtx_s* mutex);
 void mtx_unlock(struct mtx_s* mutex);
 

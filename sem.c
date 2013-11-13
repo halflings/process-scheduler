@@ -1,15 +1,18 @@
 #include "sem.h"
 #include "allocateMemory.h"
 #include "sched.h"
+#include "hw.h"
 
-void sem_init(struct sem_s* sem, unsigned int val){
-	sem = (struct sem_s*) AllocateMemory(sizeof(struct sem_s));
-	sem->val = val;
-	sem->waiting = 0;
-	sem->queue = 0;
+void sem_init(struct sem_s** sem, unsigned int val){
+	*sem = (struct sem_s*) AllocateMemory(sizeof(struct sem_s));
+	(*sem)->val = val;
+	(*sem)->waiting = 0;
+	(*sem)->queue = 0;
 }
 
 void sem_up(struct sem_s* sem) {
+
+    DISABLE_IRQ();
 	if (sem->waiting > 0) {
 		// We take the first waiting process
 		struct waiting_process* first_process = sem->queue;
@@ -17,19 +20,19 @@ void sem_up(struct sem_s* sem) {
 		sem->queue = first_process->next;
 		sem->waiting -= 1;
 
-		// Put its state at "RUNNING"
+		// Set its state as "RUNNING"
 		first_process->process->state = RUNNING;
 
 		// And free the allocated memory to its position in the queue
 		FreeAllocatedMemory((uint32_t*) first_process);
 	}
-
 	sem->val += 1;
+	ENABLE_IRQ();
 }
 
 
 void sem_down(struct sem_s* sem) {
-
+    DISABLE_IRQ();
 	sem->val -= 1;
 
 	if (sem->val < 0) {
@@ -52,17 +55,19 @@ void sem_down(struct sem_s* sem) {
 		sem->waiting += 1;
 
 		current_process->state = WAITING;
-
-		ctx_switch();
+		ENABLE_IRQ();
+        while(current_process->state== WAITING){
+            //DO NOTHING
+        }
 	}
 
 }
 
-void mtx_init(struct mtx_s* mutex){
-	mutex = (struct mtx_s*) AllocateMemory(sizeof(struct mtx_s));
-	mutex->iIsLocked = 0;
-	mutex->iWaiting = 0;
-	mutex->queue = 0;
+void mtx_init(struct mtx_s** mutex){
+	(*mutex) = (struct mtx_s*) AllocateMemory(sizeof(struct mtx_s));
+	(*mutex)->sem_mtx->val = 1;
+	(*mutex)->sem_mtx->waiting = 0;
+	(*mutex)->sem_mtx->queue = 0;
 	//mutex->pOwnerPid=getpid();
 }
 void mtx_lock(struct mtx_s* mutex){
