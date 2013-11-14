@@ -1,30 +1,10 @@
-ARMGNU ?= arm-none-eabi
+C_FILES=sched.c allocateMemory.c 
+ROOT_DIR=..
 
-OBJDUMP = $(ARMGNU)-objdump
-LD = $(ARMGNU)-ld
-OBJCOPY = $(ARMGNU)-objcopy
-CC = $(ARMGNU)-gcc
-AS = $(ARMGNU)-as
+include $(ROOT_DIR)/music_player/common.mk
 
-CFLAGS = -Wall -nostdlib -fomit-frame-pointer -mno-apcs-frame -nostartfiles -ffreestanding -g -march=armv6z -marm
-ASFLAGS = -g -march=armv6z
+all: sched.a
 
-C_FILES=hw.c allocateMemory.c sched.c sem.c
+sched.a : $(OBJS)
 
-OBJS += $(patsubst %.c,%.o, $(C_FILES))
-
-.PHONY: gcc clean
-
-gcc: $(OBJS)
-
-clean :
-	rm -f *.o
-	rm -f *.bin
-	rm -f *.hex
-	rm -f *.elf
-	rm -f *.list
-	rm -f *.img
-	rm -f *.bc
-	rm -f *.clang.opt.s
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+clean : common_clean
