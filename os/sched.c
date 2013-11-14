@@ -46,23 +46,26 @@ void  __attribute__((naked)) ctx_switch() {
     __asm volatile ("push {r0-r12,lr}");
     __asm("mov %0, sp" : "=r"(current_process->sp));
 
-    while (current_process->next->state == TERMINATED || current_process->next->state == WAITING) {
-	if (current_process->next->state == TERMINATED) {
-        	struct pcb_s* terminated_proc = current_process->next;
+
+    // Switching to the next process
+    current_process = current_process->next;
+    __asm("mov sp, %0" : : "r"(current_process->sp));
+         
+    while (current_process->state == TERMINATED || current_process->state == WAITING) {
+	if (current_process->state == TERMINATED) {
+        	struct pcb_s* terminated_proc = current_process;
         
-        	current_process->next = terminated_proc->next;
-        	current_process->next->prev = current_process;
+        	terminated_proc->prev->next = terminated_proc->next;
+        	terminated_proc->next->prev = terminated_proc->prev;
         
+		current_process = current_process->prev;
+
         	FreeAllocatedMemory((uint32_t*) terminated_proc);
 	}
         
         current_process = current_process->next;
         __asm("mov sp, %0" : : "r"(current_process->sp));
     }  
-
-    // Switching to the next process
-    current_process = current_process->next;
-    __asm("mov sp, %0" : : "r"(current_process->sp));
 
 	 
 	// Decrementing "ticks" count for sleeping processes

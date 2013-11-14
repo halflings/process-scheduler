@@ -1,7 +1,7 @@
 #include "../os/sched.h"
 #include "../os/sem.h"
 
-#DEFINE MAX_SIZE 10;
+#define MAX_SIZE 8
 int sorted[MAX_SIZE];
 int size = 0;
 
@@ -9,7 +9,7 @@ struct sem_s *insert_sem;
 
 void sort(void* args) {
     int value = (int) args;
-    sleep_proc(value*4);
+    sleep_proc(value*5);
          
     sem_down(insert_sem);
     sorted[size] = value;
@@ -21,15 +21,18 @@ void sort(void* args) {
 int notmain ( void ) {
 
     // Initializing the elements
-    int unsorted[5];
+    int unsorted[MAX_SIZE];
     unsorted[0] = 3;
-    unsorted[1] = 1;
+    unsorted[1] = 8;
     unsorted[2] = 6;
     unsorted[3] = 2;
     unsorted[4] = 4;
+    unsorted[5] = 1;
+    unsorted[6] = 12;
+    unsorted[7] = 10;
 
     int i;
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < MAX_SIZE; i++) {
         create_process(sort, (void*) unsorted[i]);
     }
 
