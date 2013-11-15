@@ -1,0 +1,27 @@
+
+define pirqs
+  set $stack_size = 15
+  set $i = $stack_size
+  while ( $i > 0 )
+     printf "%d   Ox%x ", $i, *((int*) 0x8000 - $i)
+     if ($i == $stack_size)
+     	printf " <-- bp"
+     end
+     printf  "\n"
+     set $i = $i - 1
+  end
+end
+
+define psp
+  set $stack_pointer = current_ctx->ctx_stack + current_ctx->ctx_size
+  set $i = 0
+  while ( $stack_pointer > ($sp - 1) )
+     printf "%d   Ox%x ", $i, *((int*) $stack_pointer)
+     if ($i == $stack_size)
+     	printf " <-- bp"
+     end
+     printf  "\n"
+     set $i = $i + 1
+     set $stack_pointer = $stack_pointer - 1
+  end
+end
