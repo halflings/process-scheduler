@@ -38,14 +38,18 @@ void create_process(func_t f, void* args) {
 }
 
 void  __attribute__((naked)) ctx_switch() {
-    __asm("sub lr, lr, #4");
-    __asm("srsdb sp!, #19");
-    __asm("cps #19");
+    __asm volatile("sub lr, lr, #4");
+    __asm volatile("srsdb sp!, 0x13");
+
+    __asm volatile("cps #0x13");
 
     // Saving the current context
-    __asm volatile ("push {r0-r12,lr}");
-    __asm("mov %0, sp" : "=r"(current_process->sp));
+    __asm volatile ("push {r0-r12}");
 
+
+    DISABLE_IRQ();
+
+    __asm("mov %0, sp" : "=r"(current_process->sp));
 
     // Switching to the next process
     current_process = current_process->next;
@@ -67,7 +71,6 @@ void  __attribute__((naked)) ctx_switch() {
         __asm("mov sp, %0" : : "r"(current_process->sp));
     }  
 
-	 
 	// Decrementing "ticks" count for sleeping processes
     struct pcb_s* proc_iter = current_process;
     do {
