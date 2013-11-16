@@ -67,6 +67,9 @@ led_on()
 void
 init_hw()
 {
+    /* Added to initialize the new malloc */
+    malloc_init((void *) HEAP_START);
+
     unsigned int ra;
     unsigned int rx;
 

@@ -1,5 +1,5 @@
 #include "sched.h"
-#include "allocateMemory.h"
+#include "malloc.h"
 #include "hw.h"
 
 void start_sched() {
@@ -11,13 +11,13 @@ void start_sched() {
 
 void create_process(func_t f, void* args) {
     // On initialise le PCB
-    struct pcb_s* pcb = (struct pcb_s*) AllocateMemory(sizeof(struct pcb_s));
+    struct pcb_s* pcb = (struct pcb_s*) malloc_alloc(sizeof(struct pcb_s));
     
     // init pcb
     pcb->state = NEW;
     pcb->args = args;
     pcb->entry_point = f;
-    pcb->sp = (uint32_t*) (AllocateMemory(STACK_SIZE) + (STACK_SIZE - 1) * 4);
+    pcb->sp = (uint32_t*) (malloc_alloc(STACK_SIZE) + (STACK_SIZE - 1) * 4);
     pcb->ticks = 0;
     
     if (current_process == 0) {
@@ -58,9 +58,9 @@ void  __attribute__((naked)) ctx_switch() {
         	terminated_proc->prev->next = terminated_proc->next;
         	terminated_proc->next->prev = terminated_proc->prev;
         
-		current_process = current_process->prev;
+    		current_process = current_process->prev;
 
-        	FreeAllocatedMemory((uint32_t*) terminated_proc);
+        	malloc_free((uint32_t*) terminated_proc);
 	}
         
         current_process = current_process->next;

@@ -4,7 +4,7 @@
 #include "hw.h"
 
 void sem_init(struct sem_s** sem, unsigned int val){
-	*sem = (struct sem_s*) AllocateMemory(sizeof(struct sem_s));
+	*sem = (struct sem_s*) malloc_alloc(sizeof(struct sem_s));
 	(*sem)->val = val;
 	(*sem)->waiting = 0;
 	(*sem)->queue = 0;
@@ -24,7 +24,7 @@ void sem_up(struct sem_s* sem) {
 		first_process->process->state = RUNNING;
 
 		// And free the allocated memory to its position in the queue
-		FreeAllocatedMemory((uint32_t*) first_process);
+		malloc_free((uint32_t*) first_process);
 	}
 	sem->val += 1;
 	ENABLE_IRQ();
@@ -37,7 +37,7 @@ void sem_down(struct sem_s* sem) {
 
 	if (sem->val < 0) {
 		// Initializing "wait_proc"
-		struct waiting_process* wait_proc = (struct waiting_process*) AllocateMemory(sizeof(struct waiting_process));
+		struct waiting_process* wait_proc = (struct waiting_process*) malloc_alloc(sizeof(struct waiting_process));
 		wait_proc->process = current_process;
 		wait_proc->next =  0;
 
@@ -67,7 +67,7 @@ void sem_down(struct sem_s* sem) {
 }
 
 void mtx_init(struct mtx_s** mutex){
-	(*mutex) = (struct mtx_s*) AllocateMemory(sizeof(struct mtx_s));
+	(*mutex) = (struct mtx_s*) malloc_alloc(sizeof(struct mtx_s));
 	(*mutex)->owner = 0;
     sem_init( &( (*mutex)->sem_mtx ), 1);
 	//mutex->pOwnerPid=getpid();

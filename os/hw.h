@@ -1,6 +1,19 @@
 #ifndef HW_H
 #define HW_H
 
+/* added in new version */
+
+/*
+ * Address of memory bottom
+ */
+#define HEAP_START 0x50000
+
+#define IRQ_MODE 0x12
+#define SVC_MODE 0x13
+#define SYS_MODE 0x1F
+
+/* end */
+
 #define ENABLE_IRQ()				\
   asm("\tpush {r0}\n\t"				\
       "mrs r0,cpsr\n\t"				\
