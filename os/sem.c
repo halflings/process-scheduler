@@ -1,5 +1,5 @@
 #include "sem.h"
-#include "allocateMemory.h"
+#include "malloc.h"
 #include "sched.h"
 #include "hw.h"
 

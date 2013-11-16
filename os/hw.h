@@ -1,8 +1,6 @@
 #ifndef HW_H
 #define HW_H
 
-/* added in new version */
-
 /*
  * Address of memory bottom
  */
@@ -11,8 +9,6 @@
 #define IRQ_MODE 0x12
 #define SVC_MODE 0x13
 #define SYS_MODE 0x1F
-
-/* end */
 
 #define ENABLE_IRQ()				\
   asm("\tpush {r0}\n\t"				\
@@ -36,7 +32,7 @@
 
 void enable_timer_irq();
 void disable_timer_irq();
-void set_next_tick_and_enable_timer_irq();
+void set_tick_and_enable_timer();
 
 void led_off();
 void led_on();

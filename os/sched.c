@@ -5,7 +5,7 @@
 void start_sched() {
 	DISABLE_IRQ();
 	init_hw();
-    set_next_tick_and_enable_timer_irq();
+	set_tick_and_enable_timer();
 	ENABLE_IRQ();
 }
 
@@ -88,16 +88,16 @@ void  __attribute__((naked)) ctx_switch() {
     // If the process is new, we execute its entry-point
     if (current_process->state == NEW) {
         current_process->state = RUNNING;
-        set_next_tick_and_enable_timer_irq();
-        ENABLE_IRQ();
+        set_tick_and_enable_timer();
+	ENABLE_IRQ();
         current_process->entry_point(current_process->args);
         DISABLE_IRQ();
         current_process->state = TERMINATED;
         ctx_switch();
     }
     else {
-        set_next_tick_and_enable_timer_irq();
-        // Restoring the context
+        set_tick_and_enable_timer();
+	// Restoring the context
         __asm volatile ("pop {r0-r12,lr}");
 
     }
