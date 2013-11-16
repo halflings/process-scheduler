@@ -1,7 +1,7 @@
 #ifndef SCHED_H
 #define SCHED_H
 #include <stdint.h>
-#define STACK_SIZE 0xffff
+#define STACK_SIZE 0xbbbb
 
 typedef void (*func_t) (void*);
 typedef enum {NEW,RUNNING,TERMINATED,WAITING,SLEEPING} procState;
@@ -14,7 +14,8 @@ struct pcb_s {
     int ticks;
     
     func_t entry_point;
-    
+
+    char* stack_base; 
     uint32_t* sp;
     void* args; 
 };

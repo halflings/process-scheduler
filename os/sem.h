@@ -17,7 +17,7 @@ struct sem_s {
 
 ////////////mutex
 struct mtx_s {
-    struct sem_s * sem_mtx;
+    struct sem_s* sem_mtx;
     struct pcb_s* owner;
 };
 

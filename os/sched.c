@@ -17,7 +17,9 @@ void create_process(func_t f, void* args) {
     pcb->state = NEW;
     pcb->args = args;
     pcb->entry_point = f;
-    pcb->sp = (uint32_t*) malloc_alloc(STACK_SIZE);
+    
+    pcb->stack_base = malloc_alloc(STACK_SIZE);
+    pcb->sp = ((uint32_t*) (pcb->stack_base + STACK_SIZE)) - 1;
     pcb->ticks = 0;
     
     if (current_process == 0) {
@@ -35,6 +37,9 @@ void create_process(func_t f, void* args) {
         (current_process->prev)->next = pcb;
         current_process->prev = pcb;
     }
+
+    *(pcb->sp) = 0x53;
+    pcb->sp--;
 }
 
 void  __attribute__((naked)) ctx_switch() {
@@ -64,7 +69,8 @@ void  __attribute__((naked)) ctx_switch() {
         
     		current_process = current_process->prev;
 
-        	malloc_free((uint32_t*) terminated_proc);
+        	malloc_free((char*) terminated_proc->stack_base);
+		malloc_free((char*) terminated_proc);
 	}
         
         current_process = current_process->next;
