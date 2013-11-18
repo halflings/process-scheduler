@@ -3,7 +3,7 @@ ARMGNU ?= arm-none-eabi
 CFLAGS = -Wall -nostdlib -fomit-frame-pointer -mno-apcs-frame -nostartfiles -ffreestanding -g -march=armv6z -marm -mthumb-interwork
 ASFLAGS = -g -march=armv6z
 
-C_FILES=kernel.c ../os/malloc.c ../os/hw.c ../os/sched.c ../os/dispatcher.c ../os/sem.c
+C_FILES=kernel.c malloc.c hw.c dispatcher.c sched.c
 AS_FILES=vectors.s
 
 OBJS = $(patsubst %.s,%.o,$(AS_FILES))
@@ -29,8 +29,8 @@ clean :
 %.o : %.s
 	$(ARMGNU)-as $(ASFLAGS) $< -o $@
 
-kernel : ../os/memmap $(OBJS)
-	$(ARMGNU)-ld $(OBJS) -T ../os/memmap -o kernel.elf
+kernel : memmap $(OBJS)
+	$(ARMGNU)-ld $(OBJS) -T memmap -o kernel.elf
 	$(ARMGNU)-objdump -D kernel.elf > kernel.list
 	$(ARMGNU)-objcopy kernel.elf -O binary kernel.img
 	$(ARMGNU)-objcopy kernel.elf -O ihex kernel.hex

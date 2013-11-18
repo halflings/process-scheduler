@@ -59,12 +59,25 @@ start_current_process()
   yield();
 }
 
+void blink() {
+    led_off();
+    int i = 0;
+    while (i++ < 2000000);
+
+    led_on();
+    i = 0;
+    while (i++ < 2000000);
+
+    led_off();
+}
+
 
 void yield() {
     ctx_switch();
 }
 
 void  __attribute__((naked)) ctx_switch() {
+
     __asm volatile("sub lr, lr, #4");
     __asm volatile("srsdb sp!, 0x13");
 
@@ -82,6 +95,8 @@ void  __attribute__((naked)) ctx_switch() {
     current_process = current_process->next;
     __asm("mov sp, %0" : : "r"(current_process->sp));
          
+    //blink();
+
     while (current_process->state == TERMINATED || current_process->state == WAITING) {
 	if (current_process->state == TERMINATED) {
         	struct pcb_s* terminated_proc = current_process;

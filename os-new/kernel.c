@@ -1,6 +1,6 @@
-#include "../os/hw.h"
-#include "../os/sched.h"
-#include "../os/malloc.h"
+#include "hw.h"
+#include "sched.h"
+#include "malloc.h"
 
 void
 processus_A()
