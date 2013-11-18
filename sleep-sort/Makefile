@@ -1,23 +1,17 @@
 ARMGNU ?= arm-none-eabi
 
-OBJDUMP = $(ARMGNU)-objdump
-LD = $(ARMGNU)-ld
-OBJCOPY = $(ARMGNU)-objcopy
-CC = $(ARMGNU)-gcc
-AS = $(ARMGNU)-as
-
-CFLAGS = -Wall -nostdlib -fomit-frame-pointer -mno-apcs-frame -nostartfiles -ffreestanding -g -march=armv6z -marm
+CFLAGS = -Wall -nostdlib -fomit-frame-pointer -mno-apcs-frame -nostartfiles -ffreestanding -g -march=armv6z -marm -mthumb-interwork
 ASFLAGS = -g -march=armv6z
 
-C_FILES=notmain.c ../os/hw.c ../os/allocateMemory.c ../os/sched.c ../os/sem.c
+C_FILES=kernel.c ../os/malloc.c ../os/hw.c ../os/sched.c ../os/sem.c
 AS_FILES=vectors.s
 
-OBJS = $(patsubst %.s,%.o, $(AS_FILES))
-OBJS += $(patsubst %.c,%.o, $(C_FILES))
+OBJS = $(patsubst %.s,%.o,$(AS_FILES))
+OBJS += $(patsubst %.c,%.o,$(C_FILES))
 
 .PHONY: gcc clean
 
-gcc : kernel.hex kernel.bin kernel.img
+gcc : kernel
 
 clean :
 	rm -f *.o
@@ -28,21 +22,15 @@ clean :
 	rm -f *.img
 	rm -f *.bc
 	rm -f *.clang.opt.s
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-%.o: %.s
-	$(AS) $(ASFLAGS) $< -o $@
 
-kernel.elf : ../os/memmap $(OBJS)
-	$(LD) $(OBJS) -T ../os/memmap -o kernel.elf
-	$(OBJDUMP) -D kernel.elf > kernel.list
+%.o : %.c
+	$(ARMGNU)-gcc $(CFLAGS) -c $< -o $@
 
-kernel.bin : kernel.elf
-	$(OBJCOPY) kernel.elf -O binary kernel.bin
+%.o : %.s
+	$(ARMGNU)-as $(ASFLAGS) $< -o $@
 
-kernel.hex : kernel.elf
-	$(OBJCOPY) kernel.elf -O ihex kernel.hex
-
-kernel.img : kernel.elf
-	$(OBJCOPY) kernel.elf -O binary kernel.img
-	cp kernel.img SD_Card/
+kernel : ../os/memmap $(OBJS)
+	$(ARMGNU)-ld $(OBJS) -T ../os/memmap -o kernel.elf
+	$(ARMGNU)-objdump -D kernel.elf > kernel.list
+	$(ARMGNU)-objcopy kernel.elf -O binary kernel.img
+	$(ARMGNU)-objcopy kernel.elf -O ihex kernel.hex
