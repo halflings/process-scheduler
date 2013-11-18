@@ -13,7 +13,6 @@ struct sem_s * forks[NB];
 
 void philosopher(void* args) {
 
-    int actions = 0;
     int pos = (int) args;
 
     int left = pos;
@@ -27,13 +26,20 @@ void philosopher(void* args) {
 
     int second = MAX(left,right);
 
-    while ( actions < 10) {   
+    while (1) {   
 
         sem_down(forks[first]);
 
         sem_down(forks[second]);
+		
+		if (pos == 0)
+			led_on();
+			
+		sleep_proc(5);
+		
+		if (pos == 0)
+			led_off();
 
-        actions ++;
         sem_up(forks[first]);
 
         sem_up(forks[second]);
