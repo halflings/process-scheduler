@@ -9,6 +9,8 @@ AS_FILES=vectors.s
 OBJS = $(patsubst %.s,%.o,$(AS_FILES))
 OBJS += $(patsubst %.c,%.o,$(C_FILES))
 
+OSPATH = ../os-old
+
 .PHONY: gcc clean
 
 gcc : kernel
@@ -29,7 +31,7 @@ clean :
 %.o : %.s
 	$(ARMGNU)-as $(ASFLAGS) $< -o $@
 
-kernel : ../os/memmap $(OBJS)
+kernel : $(OSPATH)/memmap $(OBJS)
 	$(ARMGNU)-ld $(OBJS) -T ../os/memmap -o kernel.elf
 	$(ARMGNU)-objdump -D kernel.elf > kernel.list
 	$(ARMGNU)-objcopy kernel.elf -O binary kernel.img
