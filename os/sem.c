@@ -20,8 +20,8 @@ void sem_up(struct sem_s* sem) {
 		sem->queue = first_process->next;
 		sem->waiting -= 1;
 
-		// Set its state as "RUNNING"
-		first_process->process->state = RUNNING;
+		// Set its state as "READY"
+		first_process->process->state = READY;
 
 		// And free the allocated memory to its position in the queue
 		malloc_free((uint32_t*) first_process);
