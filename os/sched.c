@@ -38,8 +38,6 @@ void create_process(func_t f, void* args) {
         current_process->prev = pcb;
     }
 
-    *(pcb->sp) = 0x53;
-    pcb->sp--;
 }
 
 void  __attribute__((naked)) ctx_switch() {
@@ -49,7 +47,7 @@ void  __attribute__((naked)) ctx_switch() {
     __asm volatile("cps #0x13");
 
     // Saving the current context
-    __asm volatile ("push {r0-r12}");
+    __asm volatile ("push {r0-r12,lr}");
 
 
     DISABLE_IRQ();
