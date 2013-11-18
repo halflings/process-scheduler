@@ -11,6 +11,10 @@ processus_A()
     led_on();
     while ( i++ < 2000000);
     i = 0;
+    led_off();
+    while ( i++ < 2000000);
+    i = 0;
+
   }
 }
 
@@ -35,10 +39,18 @@ start_kernel ( void )
   init_hw();
   malloc_init((void *) HEAP_START);
 
-  create_process(&processus_A, (void*) 512);
-  create_process(&processus_B, (void*) 512);
+  //led_on();
+
+  create_process(&processus_B, (void*) 0);
+  create_process(&processus_A, (void*) 0);
+  //create_process(&processus_B, (void*) 0);
   
   start_sched();
-  
+
+  //int tmp;
+  //for ( ; ; ) {
+  //  tmp++;
+  //}  
+
   return 0;
 }

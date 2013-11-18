@@ -7,6 +7,12 @@ void start_sched() {
 	init_hw();
 	set_tick_and_enable_timer();
 	ENABLE_IRQ();
+
+	// Waiting for the first ctx_switch
+	int tmp = 0;
+	while (1) {
+	    tmp++;
+	}
 }
 
 void create_process(func_t f, void* args) {
@@ -38,6 +44,24 @@ void create_process(func_t f, void* args) {
         current_process->prev = pcb;
     }
 
+    *(pcb->sp) = 0x53;
+    pcb->sp--;
+    *(pcb->sp) = (unsigned int) &start_current_process;
+
+}
+
+void
+start_current_process()
+{
+  current_process->state = RUNNING;
+  current_process->entry_point(current_process->args);
+  current_process->state = TERMINATED;
+  yield();
+}
+
+
+void yield() {
+    ctx_switch();
 }
 
 void  __attribute__((naked)) ctx_switch() {
