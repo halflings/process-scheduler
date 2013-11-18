@@ -1,7 +1,7 @@
-#include "../os/hw.h"
-#include "../os/sched.h"
-#include "../os/malloc.h"
-#include "../os/sem.h"
+#include "../os-old/hw.h"
+#include "../os-old/sched.h"
+#include "../os-old/malloc.h"
+#include "../os-old/sem.h"
 
 #define NB 5
 #define ITERA 10
