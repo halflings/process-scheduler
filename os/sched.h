@@ -1,35 +1,43 @@
 #ifndef SCHED_H
 #define SCHED_H
-
 #include <stdint.h>
-#define NULL 0x0
+#define STACK_SIZE 0xffff
+#define MAX_PRIORITY 255
 
-extern struct pcb_s* current_process;
 
-typedef void (func_t)( void* );
-
-enum pcb_state_e {READY, NEW, TERMINATED, WAITING};
+typedef void (*func_t) (void*);
+typedef enum {NEW,READY,TERMINATED,WAITING,SLEEPING} procState;
 
 struct pcb_s {
-  /* Pointer to stack */
-  uint32_t* sp;
+    procState state;
+    struct pcb_s* next;
+    struct pcb_s* prev;
     
-  /* function and args */
-  func_t* entry_point;
-  void* args;
-  
-  unsigned int size;
-  char* stack_base;
-  enum pcb_state_e state;
+    int ticks;
+    int priority;
+    
+    func_t entry_point;
 
-  struct pcb_s *next;
+    char* stack_base; 
+    uint32_t* sp;
+    void* args; 
 };
 
-int create_process(func_t* f, unsigned size, void* args);
-void yield();
+
+struct pcb_s* current_process;
+
+// Process queues
+struct pcb_s* processes[MAX_PRIORITY];
+
+void create_process(func_t f, void* args,int priority);
+void ctx_switch();
 void start_sched();
+void yield();
 void schedule();
 void start_current_process();
+void init_priorities();
 
+void sleep_proc(int ticks);
 
 #endif
+

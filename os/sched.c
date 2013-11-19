@@ -1,141 +1,209 @@
 #include "sched.h"
 #include "malloc.h"
 #include "hw.h"
-#include "dispatcher.h"
-#include "sem.h"
 
-struct pcb_s idle;
-struct pcb_s* ready_queue = (struct pcb_s *)0;
-struct pcb_s* current_process = (struct pcb_s *) NULL;
+void start_sched() {
+	DISABLE_IRQ();
+	init_hw();
+	set_tick_and_enable_timer();
+	ENABLE_IRQ();
 
-extern void processus_A();
+	// Waiting for the first ctx_switch
+	int tmp = 0;
+	while (1) {
+	    tmp++;
+	}
+}
 
-#define PRINT(MSG) ;
-#define EXIT(CODE) ;
+void create_process(func_t f, void* args, int priority) {
+
+    if (priority >= MAX_PRIORITY) {
+        priority = MAX_PRIORITY - 1;
+    }
+
+    // On initialise le PCB
+    struct pcb_s* pcb = (struct pcb_s*) malloc_alloc(sizeof(struct pcb_s));
+    
+    // init pcb
+    pcb->state = NEW;
+    pcb->args = args;
+    pcb->entry_point = f;
+    pcb->priority = priority;
+    
+    pcb->stack_base = malloc_alloc(STACK_SIZE);
+    
+    //pcb->sp = ((uint32_t*) (pcb->stack_base + STACK_SIZE)) - 1;
+    pcb->sp = (uint32_t*) pcb->stack_base + (STACK_SIZE / sizeof(uint32_t)) - 1;
+    
+    pcb->ticks = 0;
+    
+    if (current_process == 0) {
+        current_process = pcb;
+    }
+    
+    if (processes[priority] == 0) {
+        pcb->next = pcb;
+        pcb->prev = pcb;
+    
+        processes[priority] = pcb;
+    }
+    else {
+        struct pcb_s* process_head = processes[priority];
+        
+        pcb->prev = process_head->prev;
+        pcb->next = process_head;
+    
+        process_head->prev->next = pcb;
+        process_head->prev = pcb;
+    }
+    
+    *(pcb->sp) = 0x53;
+    pcb->sp--;
+    *(pcb->sp) = (unsigned int) &start_current_process;
+
+}
 
 void
 start_current_process()
 {
   current_process->state = READY;
   current_process->entry_point(current_process->args);
-
-  /* The process is terminated */
   current_process->state = TERMINATED;
   yield();
 }
 
-int
-init_process(struct pcb_s *pcb, int stack_size, func_t* f, void* args)
-{	
-  /* Function and args */
-  pcb->entry_point = f;
-  pcb->args = args;
+void blink() {
+    led_off();
+    int i = 0;
+    while (i++ < 2000000);
 
-  /* Stack allocation */
-  pcb->size=stack_size;
-  pcb->stack_base = malloc_alloc(stack_size);
-  if(!pcb->stack_base)
-    return 0;
+    led_on();
+    i = 0;
+    while (i++ < 2000000);
 
-  /* State and context */
-  pcb->state = NEW;
-  pcb->sp = ((uint32_t*) (pcb->stack_base + stack_size)) - 1;
-
-  /* Fill in the stack with CPSR and PC */
-  *(pcb->sp) = 0x53;
-  pcb->sp --;
-  *(pcb->sp) = (unsigned int) &start_current_process;
-  
-  return 1;
-}
-
-int
-create_process(func_t* f, unsigned size, void* args)
-{
-  struct pcb_s *pcb;
-  pcb = (struct pcb_s*) malloc_alloc(sizeof(struct pcb_s));
-
-  if(!pcb)
-    return 0;
-
-  if (! ready_queue) {/* First process */
-    ready_queue = pcb;
-  } else {
-    pcb->next = ready_queue->next;
-  }
-  
-  ready_queue->next = pcb;
-  return init_process(pcb, size, f, args);
+    led_off();
 }
 
 
-void
-schedule()
-{
-  struct pcb_s* pcb;
-  struct pcb_s* pcb_init;
+void yield() {
+    ctx_switch();
+}
 
-  pcb_init = current_process;
-  pcb = current_process;
+void schedule() {
 
-  /* Start by eliminating all zombies (rhaaaaa !) */
-  while (pcb->next->state == TERMINATED) {    
-    /* If no process to be executed -> note that and leave loop */
-    if (pcb->next == pcb) {
-      pcb = NULL;
-      break;
+    struct pcb_s* next_process = 0;
 
-    } else {
-      /* Particular case of the head */
-      if (pcb->next == ready_queue)
-	ready_queue = pcb;    
-      
-      /* Remove pcb from the list (FIXME : could be done after the loop) */
-      pcb->next = pcb->next->next;
+	// Choosing the first process with the highest priority
+	int i;
+	for (i = 0; i < MAX_PRIORITY; i++) {
+	    // If there's no process for this priority, we continue to the next priority
+		if (processes[i] == 0) {
+			continue;
+		}
+		
+		// Otherwise, we go throught all the processes of the current priority
+		// If we didn't choose the next process yet and we find a READY process => it'll be the next process 
+		// We also update the ticks of SLEEPing processes and put awaken processes to the READY state
+	    struct pcb_s* proc_iter = processes[i];
+	    do {
+	        int ok_process = (proc_iter->state == READY || proc_iter->state == NEW);
+	        if (next_process == 0 && ok_process) {
+	            next_process = proc_iter;
+	        }
+	        else if (proc_iter->state == SLEEPING) {
+                proc_iter->ticks -= 1;
+                if (proc_iter->ticks <= 0) {
+                	proc_iter->state = READY;
+                }
+            }
+            else if (proc_iter->state == TERMINATED) {
+                	struct pcb_s* terminated_proc = proc_iter;
+                
+                	terminated_proc->prev->next = terminated_proc->next;
+                	terminated_proc->next->prev = terminated_proc->prev;
+                	
+                	int last_process = (terminated_proc == terminated_proc->next);
+                	
+     
+                	malloc_free((char*) terminated_proc->stack_base);
+	                malloc_free((char*) terminated_proc);
+	                
+	                if (last_process) {
+	                    processes[i] = 0;
+	                    break;
+	                }
+	        }
 
-      /* Free memory */
-      malloc_free((char*) pcb->next->stack_base);
-      malloc_free((char*) pcb->next);
+        	proc_iter = proc_iter->next;
+	    }
+	    while (proc_iter != processes[i]); // do-while loop through processes of the same priority
+	    
+	} // for-loop through priorities
+	
+	processes[next_process->priority] = processes[next_process->priority]->next;
+	
+	current_process = next_process;
+}
 
-      /* Get next process */
-      pcb = pcb->next;
+void init_priorities() {
+    // Initializing process queues
+    int i;
+    for (i = 0; i < MAX_PRIORITY; i ++) {
+        processes[i] = 0;
     }
-  }
-
-  if (pcb != NULL) {
-    /* On parcours la liste jusqu'à trouver un processus non bloqué */
-    pcb = pcb->next;    
-    while(pcb->state == WAITING && pcb != pcb_init)
-      pcb = pcb->next;
-
-    /* Si tous les processus sont bloqués -> on le note */
-    if(pcb->state == WAITING)
-      pcb = NULL;
-  }
-
-  if(pcb == NULL) {   /* Si pas de processus à élire -> idle */
-    ready_queue = NULL;
-    current_process = &idle;
-  } else {            /* Sinon -> le processus élu est le suivant */
-      current_process = pcb;
-  }
 }
 
-void
-yield()
-{
-  ctx_switch();
+void  __attribute__((naked)) ctx_switch() {
+
+    __asm volatile("sub lr, lr, #4");
+    __asm volatile("srsdb sp!, 0x13");
+
+    __asm volatile("cps #0x13");
+
+    // Saving the current context
+    __asm volatile ("push {r0-r12,lr}");
+
+
+    DISABLE_IRQ();
+
+    __asm("mov %0, sp" : "=r"(current_process->sp));
+
+    // Switching to the next process
+    schedule();
+    __asm("mov sp, %0" : : "r"(current_process->sp));
+         
+    
+    // If the process is new, we execute its entry-point
+    if (current_process->state == NEW) {
+        current_process->state = READY;
+        set_tick_and_enable_timer();
+	    ENABLE_IRQ();
+        current_process->entry_point(current_process->args);
+        DISABLE_IRQ();
+        current_process->state = TERMINATED;
+        ctx_switch();
+    }
+    else {
+        set_tick_and_enable_timer();
+	    // Restoring the context
+        __asm volatile ("pop {r0-r12,lr}");
+    }
+    
+    // Cleaning up after ctx_switch's  execution
+
+    __asm("rfefd sp!");
+    ENABLE_IRQ();
+}
+ 
+
+void sleep_proc(int ticks) {
+
+    current_process->state = SLEEPING;
+    current_process->ticks = ticks;
+    
+    while (current_process->state == SLEEPING) {
+    }
 }
 
-void
-start_sched()
-{
-  current_process = &idle;
-  idle.next = ready_queue;
 
-  ENABLE_IRQ();
 
-  while(1) {
-    yield();
-  }
-}

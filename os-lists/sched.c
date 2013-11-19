@@ -15,9 +15,11 @@ void start_sched() {
 	}
 }
 
-void create_process(func_t f, void* args) {
+void create_process(func_t f, void* args, int priority) {
     // On initialise le PCB
     struct pcb_s* pcb = (struct pcb_s*) malloc_alloc(sizeof(struct pcb_s));
+    
+    pcb->schedule_queue = processes + priority;
     
     // init pcb
     pcb->state = NEW;
@@ -66,11 +68,9 @@ void blink() {
     led_off();
     int i = 0;
     while (i++ < 2000000);
-
     led_on();
     i = 0;
     while (i++ < 2000000);
-
     led_off();
 }
 
@@ -97,8 +97,6 @@ void  __attribute__((naked)) ctx_switch() {
     // Switching to the next process
     current_process = current_process->next;
     __asm("mov sp, %0" : : "r"(current_process->sp));
-         
-    //blink();
 
     while (current_process->state == TERMINATED || current_process->state == WAITING) {
 	if (current_process->state == TERMINATED) {
@@ -135,7 +133,7 @@ void  __attribute__((naked)) ctx_switch() {
     if (current_process->state == NEW) {
         current_process->state = RUNNING;
         set_tick_and_enable_timer();
-	ENABLE_IRQ();
+	    ENABLE_IRQ();
         current_process->entry_point(current_process->args);
         DISABLE_IRQ();
         current_process->state = TERMINATED;
@@ -152,6 +150,67 @@ void  __attribute__((naked)) ctx_switch() {
     __asm("rfefd sp!");
     ENABLE_IRQ();
 }
+
+void move_process(struct pcb_s* process, struct pcb_s** source, struct pcb_s* destination) {
+	
+	if (process->next == process) {
+	    (*source) = 0;
+	}
+	else {
+	    // Removing the process from the current list
+	    process->prev->next = process->next;
+	    process->next->prev = process->prev;
+
+        // Putting in the destination list
+        process->next = destination;
+        process->prev = destination->prev;
+
+        destination->prev->next = process;
+        destination->prev = process;
+    }
+}
+
+void schedule() {
+	struct pcb_s* next_process = 0;
+
+    while (next_process == 0) {
+    
+        if (proc_iter ==
+    
+	    // Decrementing "ticks" count for sleeping processes
+	    struct pcb_s* proc_iter = sleeping_processes;
+	    do {
+            proc_iter->ticks -= 1;
+            if (proc_iter->ticks <= 0) {
+            	// Saving the pointer to the next sleeping process
+            	struct pcb_s* next_process = proc_iter->next;
+
+            	// Putting the process back in its scheduling queue
+                move_process(proc_iter, &sleeping_processes, proc_iter->schedule_queue);
+
+                // Restoring the next sleeping process
+                proc_iter = next_process;
+            }
+            else {	    
+	        	proc_iter = proc_iter->next;
+	        }
+	    }
+	    while (proc_iter != sleeping_processes);
+	
+	    // Choosing the first process with the highest priority
+	    for (int i = 0; i < MAX_PRIORITY; i++) {
+		    if (processes[i] == 0) {
+			    continue;
+		    }
+
+		    next_process = processes[i];
+		    processes[i] = processes[i]->next;
+		    break;
+	    }
+	}
+	
+	current_process = next_process;
+} 
  
 
 void sleep_proc(int ticks) {

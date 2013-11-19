@@ -36,7 +36,7 @@ int start_kernel ( void ) {
 
     int i;
     for (i = 0; i < MAX_SIZE; i++) {
-        create_process(sort, (void*) unsorted[i]);
+        create_process(sort, (void*) unsorted[i], 0);
     }
 
     sem_init(&insert_sem, 1);

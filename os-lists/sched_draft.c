@@ -6,7 +6,7 @@ struct pcb_s* current_process;
 // Process queues
 struct pcb_s* processes[MAX_PRIORITY];
 struct pcb_s* sleeping_processes;
-struct pcb_s* terminated;
+
 
 
 // In the scheduling algorithm

@@ -26,17 +26,16 @@ void sem_up(struct sem_s* sem) {
 		// And free the allocated memory to its position in the queue
 		malloc_free((uint32_t*) first_process);
 	}
-	else {
-	    sem->val += 1;
-	}
+	sem->val += 1;
 	ENABLE_IRQ();
 }
 
 
 void sem_down(struct sem_s* sem) {
     DISABLE_IRQ();
+	sem->val -= 1;
 
-	if (sem->val <= 0) {
+	if (sem->val < 0) {
 		// Initializing "wait_proc"
 		struct waiting_process* wait_proc = (struct waiting_process*) malloc_alloc(sizeof(struct waiting_process));
 		wait_proc->process = current_process;
@@ -62,7 +61,6 @@ void sem_down(struct sem_s* sem) {
         }
 	}
 	else {
-		sem->val -= 1;
 		ENABLE_IRQ();
 	}
 
@@ -87,6 +85,5 @@ void mtx_unlock(struct mtx_s* mutex){
     }
 	ENABLE_IRQ();
 }
-
 
 

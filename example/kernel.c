@@ -1,7 +1,7 @@
-#include "../os-old/sched.h"
-#include "../os-old/sem.h"
-#include "../os-old/hw.h"
-#include "../os-old/malloc.h"
+#include "../os/sched.h"
+#include "../os/sem.h"
+#include "../os/hw.h"
+#include "../os/malloc.h"
 //------------------------------------------------------------------------
 
 int cpt = 0;

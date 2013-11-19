@@ -1,16 +1,17 @@
-#include "../os-old/hw.h"
-#include "../os-old/sched.h"
-#include "../os-old/malloc.h"
+#include "../os/hw.h"
+#include "../os/sched.h"
+#include "../os/malloc.h"
 
 void
 processus_A()
 {
   int i = 0;
-  
-  while (1) {
+  int j = 0;
+  while (j < 10) {
     led_on();
     while ( i++ < 2000000);
     i = 0;
+    j++;
   }
 }
 
@@ -31,14 +32,14 @@ processus_B()
 int
 start_kernel ( void )
 {
-  DISABLE_IRQ();
-  init_hw();
-  malloc_init((void *) HEAP_START);
+    malloc_init((void *) HEAP_START);
+    init_priorities();
 
-  create_process(&processus_A, (void*) 0);
-  create_process(&processus_B, (void*) 0);
+    create_process(&processus_A, (void*) 0, 0);
+    create_process(&processus_B, (void*) 0, 100);
   
-  start_sched();
+    start_sched();
   
-  return 0;
+    return 0;
 }
+

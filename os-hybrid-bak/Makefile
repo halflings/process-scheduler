@@ -3,8 +3,9 @@ ARMGNU ?= arm-none-eabi
 CFLAGS = -Wall -nostdlib -fomit-frame-pointer -mno-apcs-frame -nostartfiles -ffreestanding -g -march=armv6z -marm -mthumb-interwork
 ASFLAGS = -g -march=armv6z
 
-C_FILES=malloc.c hw.c sched.c
+C_FILES=kernel.c malloc.c hw.c dispatcher.c sched.c
 AS_FILES=vectors.s
+
 OBJS = $(patsubst %.s,%.o,$(AS_FILES))
 OBJS += $(patsubst %.c,%.o,$(C_FILES))
 

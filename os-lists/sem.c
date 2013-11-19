@@ -20,22 +20,23 @@ void sem_up(struct sem_s* sem) {
 		sem->queue = first_process->next;
 		sem->waiting -= 1;
 
-		// Set its state as "RUNNING"
-		first_process->process->state = RUNNING;
+		// Put the process back in the active list
+		put_back(first_process->process);
 
 		// And free the allocated memory to its position in the queue
 		malloc_free((uint32_t*) first_process);
 	}
-	sem->val += 1;
+	else {
+	    sem->val += 1;
+	}
 	ENABLE_IRQ();
 }
 
 
 void sem_down(struct sem_s* sem) {
     DISABLE_IRQ();
-	sem->val -= 1;
-
-	if (sem->val < 0) {
+	
+	if (sem->val <= 0) {
 		// Initializing "wait_proc"
 		struct waiting_process* wait_proc = (struct waiting_process*) malloc_alloc(sizeof(struct waiting_process));
 		wait_proc->process = current_process;
@@ -53,14 +54,21 @@ void sem_down(struct sem_s* sem) {
 		}
 
 		sem->waiting += 1;
-
+        
+        // TODO : Marche pas si c'est le dernier process de sa queue
+        // ... 'va juste changer la valeur de current_process->schedule_queue
+        move_process(current_process, &current_process->schedule_queue, waiting)
+        
 		current_process->state = WAITING;
 		ENABLE_IRQ();
+		
+        // TODO : Schedule instead of doing a while
         while(current_process->state== WAITING){
             //DO NOTHING
         }
 	}
 	else {
+	    sem->val -= 1;
 		ENABLE_IRQ();
 	}
 
