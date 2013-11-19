@@ -97,11 +97,13 @@ void schedule() {
 		    // Otherwise, we go throught all the processes of the current priority
 		    // If we didn't choose the next process yet and we find a READY process => it'll be the next process 
 		    // We also update the ticks of SLEEPing processes and put awaken processes to the READY state
+		    struct pcb_s* proc_init = processes[i];
 	        struct pcb_s* proc_iter = processes[i];
 	        do {
 	            int ok_process = (proc_iter->state == READY || proc_iter->state == NEW);
 	            if (next_process == 0 && ok_process) {
 	                next_process = proc_iter;
+	                processes[i] = next_process->next;
 	            }
 	            else if (proc_iter->state == SLEEPING) {
                     proc_iter->ticks -= 1;
@@ -116,7 +118,6 @@ void schedule() {
                     	terminated_proc->next->prev = terminated_proc->prev;
                     	
                     	int last_process = (terminated_proc == terminated_proc->next);
-                    	
          
                     	malloc_free((char*) terminated_proc->stack_base);
 	                    malloc_free((char*) terminated_proc);
@@ -129,12 +130,11 @@ void schedule() {
 
             	proc_iter = proc_iter->next;
 	        }
-	        while (proc_iter != processes[i]); // do-while loop through processes of the same priority
+	        while (proc_iter != proc_init); // do-while loop through processes of the same priority
 	        
 	    } // for-loop through priorities
 	}
 	
-	processes[next_process->priority] = processes[next_process->priority]->next;
 	
 	current_process = next_process;
 }
@@ -162,7 +162,7 @@ void  __attribute__((naked)) ctx_switch() {
     __asm("mov %0, sp" : "=r"(current_process->sp));
 
     // Switching to the next process
-    if (current_process->priority != 0 || current_process->state == TERMINATED || current_process->state == SLEEPING) {
+    if (current_process->priority != 0 || current_process->state != READY) {
         schedule();
         __asm("mov sp, %0" : : "r"(current_process->sp));
     }
@@ -177,7 +177,7 @@ void  __attribute__((naked)) ctx_switch() {
         current_process->entry_point(current_process->args);
         DISABLE_IRQ();
         current_process->state = TERMINATED;
-        yield();
+        ctx_switch();
     }
     else {
         set_tick_and_enable_timer();
