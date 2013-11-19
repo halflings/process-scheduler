@@ -6,13 +6,10 @@ void
 processus_A()
 {
   int i = 0;
-  int j = 0;
-  while (j < 10) {
+  while (1) {
     led_on();
     while ( i++ < 2000000);
     i = 0;
-    j++;
-    
     yield();
   }
 }
@@ -26,7 +23,6 @@ processus_B()
     led_off();
     while ( i++ < 2000000);
     i = 0;
-    
     yield();
   }
 }

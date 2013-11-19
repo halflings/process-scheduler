@@ -22,7 +22,8 @@ void sort(void* args) {
 //------------------------------------------------------------------------
 int start_kernel ( void ) {
     malloc_init((void*) HEAP_START);
-
+    init_priorities();
+    
     // Initializing the elements
     int unsorted[MAX_SIZE];
     unsorted[0] = 3;

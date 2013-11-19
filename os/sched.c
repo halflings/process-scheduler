@@ -194,6 +194,7 @@ void  __attribute__((naked)) ctx_switch() {
  
  
 void yield() {
+    
     // Saving the current context
     __asm volatile ("push {r0-r12,lr}");
     
@@ -224,6 +225,7 @@ void yield() {
         __asm volatile ("pop {r0-r12,lr}");
     }
     
+
 }
 
  
