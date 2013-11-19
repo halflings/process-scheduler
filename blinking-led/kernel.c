@@ -12,6 +12,8 @@ processus_A()
     while ( i++ < 2000000);
     i = 0;
     j++;
+    
+    yield();
   }
 }
 
@@ -24,6 +26,8 @@ processus_B()
     led_off();
     while ( i++ < 2000000);
     i = 0;
+    
+    yield();
   }
 }
 
@@ -35,8 +39,8 @@ start_kernel ( void )
     malloc_init((void *) HEAP_START);
     init_priorities();
 
-    create_process(&processus_A, (void*) 0, 0);
-    create_process(&processus_B, (void*) 0, 100);
+    create_process(&processus_A, (void*) 0, COLLABORATIVE);
+    create_process(&processus_B, (void*) 0, COLLABORATIVE);
   
     start_sched();
   

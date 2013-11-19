@@ -4,6 +4,8 @@
 #define STACK_SIZE 0xffff
 #define MAX_PRIORITY 255
 
+#define COLLABORATIVE -100
+#define UNPRIORITIZED -2000
 
 typedef void (*func_t) (void*);
 typedef enum {NEW,READY,TERMINATED,WAITING,SLEEPING} procState;

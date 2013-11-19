@@ -17,10 +17,19 @@ void start_sched() {
 
 void create_process(func_t f, void* args, int priority) {
 
-    if (priority >= MAX_PRIORITY) {
+    if (priority == COLLABORATIVE) {
+        priority = 0;
+    }
+    else if (priority == UNPRIORITIZED) {
+        priority = 1;
+    }
+    else if (priority <= 1) {
+        priority = 1;
+    }
+    else if (priority >= MAX_PRIORITY) {
         priority = MAX_PRIORITY - 1;
     }
-
+    
     // On initialise le PCB
     struct pcb_s* pcb = (struct pcb_s*) malloc_alloc(sizeof(struct pcb_s));
     
@@ -72,73 +81,58 @@ start_current_process()
   yield();
 }
 
-void blink() {
-    led_off();
-    int i = 0;
-    while (i++ < 2000000);
-
-    led_on();
-    i = 0;
-    while (i++ < 2000000);
-
-    led_off();
-}
-
-
-void yield() {
-    ctx_switch();
-}
-
 void schedule() {
 
     struct pcb_s* next_process = 0;
 
-	// Choosing the first process with the highest priority
-	int i;
-	for (i = 0; i < MAX_PRIORITY; i++) {
-	    // If there's no process for this priority, we continue to the next priority
-		if (processes[i] == 0) {
-			continue;
-		}
+    while (next_process == 0) {
+	    // Choosing the first process with the highest priority
+	    int i;
+	    for (i = 0; i < MAX_PRIORITY; i++) {
+	        // If there's no process for this priority, we continue to the next priority
+		    if (processes[i] == 0) {
+			    continue;
+		    }
 		
-		// Otherwise, we go throught all the processes of the current priority
-		// If we didn't choose the next process yet and we find a READY process => it'll be the next process 
-		// We also update the ticks of SLEEPing processes and put awaken processes to the READY state
-	    struct pcb_s* proc_iter = processes[i];
-	    do {
-	        int ok_process = (proc_iter->state == READY || proc_iter->state == NEW);
-	        if (next_process == 0 && ok_process) {
-	            next_process = proc_iter;
-	        }
-	        else if (proc_iter->state == SLEEPING) {
-                proc_iter->ticks -= 1;
-                if (proc_iter->ticks <= 0) {
-                	proc_iter->state = READY;
+		    // Otherwise, we go throught all the processes of the current priority
+		    // If we didn't choose the next process yet and we find a READY process => it'll be the next process 
+		    // We also update the ticks of SLEEPing processes and put awaken processes to the READY state
+	        struct pcb_s* proc_iter = processes[i];
+	        do {
+	            int ok_process = (proc_iter->state == READY || proc_iter->state == NEW);
+	            if (next_process == 0 && ok_process) {
+	                next_process = proc_iter;
+	            }
+	            else if (proc_iter->state == SLEEPING) {
+                    proc_iter->ticks -= 1;
+                    if (proc_iter->ticks <= 0) {
+                    	proc_iter->state = READY;
+                    }
                 }
-            }
-            else if (proc_iter->state == TERMINATED) {
-                	struct pcb_s* terminated_proc = proc_iter;
-                
-                	terminated_proc->prev->next = terminated_proc->next;
-                	terminated_proc->next->prev = terminated_proc->prev;
-                	
-                	int last_process = (terminated_proc == terminated_proc->next);
-                	
-     
-                	malloc_free((char*) terminated_proc->stack_base);
-	                malloc_free((char*) terminated_proc);
-	                
-	                if (last_process) {
-	                    processes[i] = 0;
-	                    break;
-	                }
-	        }
+                else if (proc_iter->state == TERMINATED) {
+                    	struct pcb_s* terminated_proc = proc_iter;
+                    
+                    	terminated_proc->prev->next = terminated_proc->next;
+                    	terminated_proc->next->prev = terminated_proc->prev;
+                    	
+                    	int last_process = (terminated_proc == terminated_proc->next);
+                    	
+         
+                    	malloc_free((char*) terminated_proc->stack_base);
+	                    malloc_free((char*) terminated_proc);
+	                    
+	                    if (last_process) {
+	                        processes[i] = 0;
+	                        break;
+	                    }
+	            }
 
-        	proc_iter = proc_iter->next;
-	    }
-	    while (proc_iter != processes[i]); // do-while loop through processes of the same priority
-	    
-	} // for-loop through priorities
+            	proc_iter = proc_iter->next;
+	        }
+	        while (proc_iter != processes[i]); // do-while loop through processes of the same priority
+	        
+	    } // for-loop through priorities
+	}
 	
 	processes[next_process->priority] = processes[next_process->priority]->next;
 	
@@ -163,9 +157,48 @@ void  __attribute__((naked)) ctx_switch() {
     // Saving the current context
     __asm volatile ("push {r0-r12,lr}");
 
-
     DISABLE_IRQ();
 
+    __asm("mov %0, sp" : "=r"(current_process->sp));
+
+    // Switching to the next process
+    if (current_process->priority != 0 || current_process->state == TERMINATED || current_process->state == SLEEPING) {
+        schedule();
+        __asm("mov sp, %0" : : "r"(current_process->sp));
+    }
+
+    // If the process is new, we execute its entry-point
+    if (current_process->state == NEW) {
+        current_process->state = READY;
+
+        set_tick_and_enable_timer();
+        ENABLE_IRQ();
+
+        current_process->entry_point(current_process->args);
+        DISABLE_IRQ();
+        current_process->state = TERMINATED;
+        yield();
+    }
+    else {
+        set_tick_and_enable_timer();
+        
+	    // Restoring the context
+        __asm volatile ("pop {r0-r12,lr}");
+    }
+    
+    // Cleaning up after ctx_switch's  execution
+
+    __asm("rfefd sp!");
+    ENABLE_IRQ();
+}
+ 
+ 
+void yield() {
+    // Saving the current context
+    __asm volatile ("push {r0-r12,lr}");
+    
+    DISABLE_IRQ();
+    
     __asm("mov %0, sp" : "=r"(current_process->sp));
 
     // Switching to the next process
@@ -176,24 +209,23 @@ void  __attribute__((naked)) ctx_switch() {
     // If the process is new, we execute its entry-point
     if (current_process->state == NEW) {
         current_process->state = READY;
+
         set_tick_and_enable_timer();
-	    ENABLE_IRQ();
+        ENABLE_IRQ();
+
         current_process->entry_point(current_process->args);
         DISABLE_IRQ();
         current_process->state = TERMINATED;
-        ctx_switch();
+
+        yield();
     }
     else {
-        set_tick_and_enable_timer();
-	    // Restoring the context
+        // Restoring the context
         __asm volatile ("pop {r0-r12,lr}");
     }
     
-    // Cleaning up after ctx_switch's  execution
-
-    __asm("rfefd sp!");
-    ENABLE_IRQ();
 }
+
  
 
 void sleep_proc(int ticks) {
