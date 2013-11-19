@@ -1,6 +1,6 @@
-#include "../os/hw.h"
-#include "../os/sched.h"
-#include "../os/malloc.h"
+#include "../os-old/hw.h"
+#include "../os-old/sched.h"
+#include "../os-old/malloc.h"
 
 void
 processus_A()
@@ -35,8 +35,8 @@ start_kernel ( void )
   init_hw();
   malloc_init((void *) HEAP_START);
 
-  create_process(&processus_A, 512);
-  create_process(&processus_B, 512);
+  create_process(&processus_A, (void*) 0);
+  create_process(&processus_B, (void*) 0);
   
   start_sched();
   

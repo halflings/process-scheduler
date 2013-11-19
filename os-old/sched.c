@@ -25,7 +25,10 @@ void create_process(func_t f, void* args) {
     pcb->entry_point = f;
     
     pcb->stack_base = malloc_alloc(STACK_SIZE);
-    pcb->sp = ((uint32_t*) (pcb->stack_base + STACK_SIZE)) - 1;
+    
+    //pcb->sp = ((uint32_t*) (pcb->stack_base + STACK_SIZE)) - 1;
+    pcb->sp = pcb->stack_base + (STACK_SIZE / sizeof(uint32_t)) - 1;
+    
     pcb->ticks = 0;
     
     if (current_process == 0) {

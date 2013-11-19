@@ -1,7 +1,7 @@
-#include "../os/sched.h"
-#include "../os/sem.h"
-#include "../os/hw.h"
-#include "../os/malloc.h"
+#include "../os-old/sched.h"
+#include "../os-old/sem.h"
+#include "../os-old/hw.h"
+#include "../os-old/malloc.h"
 //------------------------------------------------------------------------
 
 int cpt = 0;
@@ -36,8 +36,8 @@ void funcTwo(void* args) {
 int start_kernel ( void ) {
     malloc_init((void *) HEAP_START);
 
-    create_process(&funcOne, 512, (void*) 0);
-    create_process(&funcTwo, 512, (void*) 0);
+    create_process(&funcOne, (void*) 0);
+    create_process(&funcTwo, (void*) 0);
 
     sem_init(&sem_test, 1);
     
