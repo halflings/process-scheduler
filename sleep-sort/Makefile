@@ -34,3 +34,4 @@ kernel : ../os/memmap $(OBJS)
 	$(ARMGNU)-objdump -D kernel.elf > kernel.list
 	$(ARMGNU)-objcopy kernel.elf -O binary kernel.img
 	$(ARMGNU)-objcopy kernel.elf -O ihex kernel.hex
+	cd debug; gnome-terminal -x ./run-qemu.sh; ./launch-gdb.sh;
