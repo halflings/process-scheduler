@@ -22,7 +22,8 @@ void sort(void* args) {
 //------------------------------------------------------------------------
 int start_kernel ( void ) {
     malloc_init((void*) HEAP_START);
-
+    init_priorities();
+    
     // Initializing the elements
     int unsorted[MAX_SIZE];
     unsorted[0] = 3;
@@ -36,7 +37,7 @@ int start_kernel ( void ) {
 
     int i;
     for (i = 0; i < MAX_SIZE; i++) {
-        create_process(sort, (void*) unsorted[i]);
+        create_process(sort, (void*) unsorted[i], 2);
     }
 
     sem_init(&insert_sem, 1);

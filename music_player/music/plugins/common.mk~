@@ -1,0 +1,18 @@
+ROOT_DIR=$(PLUGINS_DIR)/../../
+include $(ROOT_DIR)/common.mk
+
+PKGFLAGS += `pkg-config --cflags --libs lv2`
+BUNDLE=$(LV2NAME).lv2
+TTL=$(LV2NAME).ttl
+INSTALL_DIR=../../installed_plugins
+LIBNAME=$(LV2NAME).a
+
+all : $(BUNDLE)
+
+$(BUNDLE): manifest.ttl $(TTL) $(LIBNAME)
+	mkdir -p $(BUNDLE)
+	cp *.ttl $(LIBNAME) $(BUNDLE);
+
+clean :
+	rm -f *.o *.a *.so
+	rm -rf $(BUNDLE)

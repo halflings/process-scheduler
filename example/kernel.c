@@ -14,7 +14,7 @@ void funcOne(void* args) {
         for (i=0; i<10000000;i++){
             cpt++;
         }
-	sleep_proc(4);
+	//sleep_proc(4);
         sem_up(sem_test);
     }    
 }
@@ -27,7 +27,7 @@ void funcTwo(void* args) {
         for (i=0; i<10000000;i++){
             cpt++;
         }
-	    sleep_proc(1);
+	//sleep_proc(1);
         sem_up(sem_test);
     }              
 }
@@ -36,8 +36,8 @@ void funcTwo(void* args) {
 int start_kernel ( void ) {
     malloc_init((void *) HEAP_START);
 
-    create_process(funcOne, (void*) 0);
-    create_process(funcTwo, (void*) 0);
+    create_process(&funcOne, (void*) 0);
+    create_process(&funcTwo, (void*) 0);
 
     sem_init(&sem_test, 1);
     
