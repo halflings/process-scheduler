@@ -1,0 +1,5 @@
+/**
+ * Handles opening of and synchronization with the reveal.js
+ * notes window.
+ */
+var RevealNotes=function(){function e(){function n(){var e=Reveal.getCurrentSlide(),n=Reveal.getIndices(),r,i=e.querySelector("aside.notes"),s,o;e.nextElementSibling&&e.parentNode.nodeName=="SECTION"?(s=n.h,o=n.v+1):(s=n.h+1,o=0),r={notes:i?i.innerHTML:"",indexh:n.h,indexv:n.v,indexf:n.f,nextindexh:s,nextindexv:o,markdown:i?typeof i.getAttribute("data-markdown")=="string":!1},t.postMessage(JSON.stringify(r),"*")}var e=document.querySelector('script[src$="notes.js"]').src;e=e.replace(/notes\.js(\?.*)?$/,"");var t=window.open(e+"notes.html","reveal.js - Notes","width=1120,height=850");Reveal.addEventListener("slidechanged",n),Reveal.addEventListener("fragmentshown",n),Reveal.addEventListener("fragmenthidden",n),t.addEventListener("load",function(e){n()},!1)}return window.location.search.match(/(\?|\&)notes/gi)!==null&&e(),document.addEventListener("keydown",function(t){if(document.querySelector(":focus")!==null||t.shiftKey||t.altKey||t.ctrlKey||t.metaKey)return;t.keyCode===83&&(t.preventDefault(),e())},!1),{open:e}}();
